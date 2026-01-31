@@ -1,3 +1,30 @@
+.card-3d {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transform-style: preserve-3d;
+}
+
+.currently-focusing {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;   /* 👈 forces vertical */
+  gap: 12px;                /* spacing between pills */
+  align-items: flex-start;  /* keeps pill width natural */
+}
+
+.hero-highlights {
+  margin-top: 28px;       /* creates breathing space */
+  display: flex;
+  flex-direction: column;
+  gap: 14px;              /* key: space between lines */
+}
+
+.hero-highlights span {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  opacity: 0.9;
+}
+
+
 :root {
   /* Default values (will be overridden by theme classes) */
   --bg: #101115;
@@ -403,15 +430,18 @@ body.theme-space-light .btn-ghost:hover {
 }
 .hero-meta {
   display: flex;
+  flex-direction: column;
   flex-wrap: wrap;
   gap: 14px;
   margin-top: 22px;
   font-size: 13px;
   color: var(--text-muted);
   position: relative;
+  align-items: flex-start;
   z-index: 1;
 }
 .hero-meta span {
+  display: inline-flex;
   padding: 6px 10px;
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.5);
