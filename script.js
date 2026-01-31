@@ -61,23 +61,40 @@ if (logoBtn) {
   });
 }
 
-document.querySelectorAll('.card-3d').forEach(card => {
-  card.addEventListener('mousemove', e => {
-    const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+// Detect touch devices (phones/tablets)
+const isTouchDevice =
+  'ontouchstart' in window ||
+  navigator.maxTouchPoints > 0;
 
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
+// Apply tilt ONLY if not a touch device
+if (!isTouchDevice) {
+  document.querySelectorAll('.card-3d').forEach(card => {
+    card.style.transformStyle = 'preserve-3d';
+    card.style.transition = 'transform 0.15s ease-out';
 
-    const rotateX = -(y - centerY) / 20;
-    const rotateY = (x - centerX) / 20;
+    const maxTilt = 3; // ⭐ subtle & professional
 
-    card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    card.addEventListener('mousemove', e => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+
+      let rotateX = -(y - centerY) / 60;
+      let rotateY = (x - centerX) / 60;
+
+      rotateX = Math.max(-maxTilt, Math.min(maxTilt, rotateX));
+      rotateY = Math.max(-maxTilt, Math.min(maxTilt, rotateY));
+
+      card.style.transform =
+        `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    });
+
+    card.addEventListener('mouseleave', () => {
+      card.style.transform =
+        'perspective(800px) rotateX(0deg) rotateY(0deg)';
+    });
   });
-
-  card.addEventListener('mouseleave', () => {
-    card.style.transform = 'rotateX(0) rotateY(0)';
-  });
-});
-
+}
