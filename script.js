@@ -1,339 +1,100 @@
-// Tilt Effect Initialization
-function initTilt() {
+// Set current year
+document.getElementById("year").textContent = new Date().getFullYear();
 
-  const tiltElements =
-    document.querySelectorAll('.tilt-element');
+const body = document.body;
+const THEME_KEY = "portfolio-space-theme";
+const toggleButtons = document.querySelectorAll(".theme-toggle-btn");
 
-  tiltElements.forEach(element => {
+function applyTheme(themeName) {
+  body.classList.remove("theme-space-dark", "theme-space-light");
+  body.classList.add("theme-" + themeName);
 
-    // Prevent duplicate event listeners
-    if (element.dataset.tiltInit) return;
-
-    element.dataset.tiltInit = "true";
-
-    const intensity =
-      parseFloat(element.dataset.intensity) || 10;
-
-    element.addEventListener('mousemove', (e) => {
-
-      const rect = element.getBoundingClientRect();
-
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-
-      const mouseX = e.clientX - centerX;
-      const mouseY = e.clientY - centerY;
-
-      const rotateX =
-        (mouseY / (rect.height / 2)) * -intensity;
-
-      const rotateY =
-        (mouseX / (rect.width / 2)) * intensity;
-
-      element.style.transform =
-        `perspective(1000px)
-       rotateX(${rotateX}deg)
-       rotateY(${rotateY}deg)
-       scale3d(1,1,1)`;
-
-    });
-
-    element.addEventListener('mouseleave', () => {
-
-      element.style.transform =
-        'perspective(1000px) rotateX(0deg) rotateY(0deg)';
-
-    });
-
+  // Update active state on buttons
+  toggleButtons.forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.theme === themeName);
   });
-
 }
 
-console.log("SCRIPT IS LOADED");
-// Theme Toggle
-const desktopThemeToggle = document.getElementById('themeToggle');
-const mobileThemeToggle = document.getElementById('mobileThemeToggle');
+// Load saved theme or default to dark
+const saved = localStorage.getItem(THEME_KEY);
+const initialTheme =
+  saved === "space-light" || saved === "space-dark"
+    ? saved
+    : "space-dark";
 
-const sunIcon = document.getElementById('sunIcon');
-const moonIcon = document.getElementById('moonIcon');
+applyTheme(initialTheme);
+localStorage.setItem(THEME_KEY, initialTheme);
 
-const html = document.documentElement;
-
-// Default Theme
-const currentTheme = localStorage.getItem('theme') || 'dark';
-
-html.classList.toggle('dark', currentTheme === 'dark');
-
-updateThemeIcons();
-
-// THEME FUNCTION
-function toggleTheme() {
-
-  html.classList.toggle('dark');
-
-  const theme = html.classList.contains('dark')
-    ? 'dark'
-    : 'light';
-
-  localStorage.setItem('theme', theme);
-
-  updateThemeIcons();
-}
-
-// DESKTOP BUTTON
-if (desktopThemeToggle) {
-  desktopThemeToggle.addEventListener('click', toggleTheme);
-}
-
-// MOBILE BUTTON
-if (mobileThemeToggle) {
-  mobileThemeToggle.addEventListener('click', toggleTheme);
-}
-
-// UPDATE ICONS
-function updateThemeIcons() {
-
-  const isDark = html.classList.contains('dark');
-
-  if (sunIcon) {
-    sunIcon.style.display = isDark ? 'block' : 'none';
-  }
-
-  if (moonIcon) {
-    moonIcon.style.display = isDark ? 'none' : 'block';
-  }
-}
-
-// 3D Tilt Effect
-initTilt();
-
-// Smooth Scrolling
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-  anchor.addEventListener('click', function (e) {
-    e.preventDefault();
-    const target = document.querySelector(this.getAttribute('href'));
-    if (target) {
-      target.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      });
-    }
+// Button click handlers
+toggleButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const value = btn.dataset.theme;
+    applyTheme(value);
+    localStorage.setItem(THEME_KEY, value);
   });
 });
 
-const form = document.getElementById("contact-form");
-const status = document.getElementById("form-status");
-if (form) {
-  form.addEventListener("submit", function (e) {
-    e.preventDefault();
+// Logo: smooth-scroll to top when clicked. If you're on a different page
+// and want it to reload the root page, replace the handler with
+// `location.href = '/';` or similar.
+const logoBtn = document.getElementById('logo');
+if (logoBtn) {
+  logoBtn.addEventListener('click', (e) => {
+    // Smooth scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    emailjs.sendForm("service_lgozq4v", "template_8sjln8m", this)
-      .then(() => {
-        status.className = "form-status success";
-        status.innerHTML = "✅ Your message has been sent successfully. I will get back to you soon.";
-        setTimeout(() => {
-          status.style.display = "none";
-        }, 4000);
-        form.reset();
-      })
-      .catch((error) => {
-        status.className = "form-status error";
-        status.innerHTML = "❌ Something went wrong. Please try again later.";
-        console.log(error);
-      });
+    // For accessibility: move focus to the main container after scroll
+    // (so keyboard users are aware they're at the top)
+    setTimeout(() => {
+      const firstHeading = document.querySelector('h1');
+      if (firstHeading) firstHeading.setAttribute('tabindex', '-1');
+      if (firstHeading) firstHeading.focus();
+    }, 450);
+  });
+
+  // Optional: allow Enter/Space activation for keyboard users
+  logoBtn.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter' || ev.key === ' ') {
+      ev.preventDefault();
+      logoBtn.click();
+    }
   });
 }
 
-function toggleMenu() {
-  document.getElementById("resumeMenu").classList.toggle("show");
-}
+// Detect touch devices (phones/tablets)
+const isTouchDevice =
+  'ontouchstart' in window ||
+  navigator.maxTouchPoints > 0;
 
-// Close dropdown when clicking outside
-window.addEventListener("click", function (e) {
-  if (!e.target.closest(".resume-dropdown")) {
-    document.getElementById("resumeMenu").classList.remove("show");
-  }
-});
+// Apply tilt ONLY if not a touch device
+if (!isTouchDevice) {
+  document.querySelectorAll('.card-3d').forEach(card => {
+    card.style.transformStyle = 'preserve-3d';
+    card.style.transition = 'transform 0.15s ease-out';
 
-function toggleMobileMenu() {
-  document.getElementById("mobileNav").classList.toggle("active");
-}
+    const maxTilt = 3; // ⭐ subtle & professional
 
-// AUTO CLOSE MOBILE MENU
-document.querySelectorAll('.mobile-nav a').forEach(link => {
+    card.addEventListener('mousemove', e => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
 
-  link.addEventListener('click', () => {
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
 
-    document
-      .getElementById('mobileNav')
-      .classList.remove('active');
+      let rotateX = -(y - centerY) / 60;
+      let rotateY = (x - centerX) / 60;
 
-  });
+      rotateX = Math.max(-maxTilt, Math.min(maxTilt, rotateX));
+      rotateY = Math.max(-maxTilt, Math.min(maxTilt, rotateY));
 
-});
-
-
-const reviewForm = document.getElementById("reviewForm");
-
-if (reviewForm) {
-
-  reviewForm.addEventListener("submit", async (e) => {
-
-    e.preventDefault();
-
-    const selectedRating =
-      document.querySelector(
-        'input[name="rating"]:checked'
-      );
-
-    if (!selectedRating) {
-
-      const msg =
-        document.getElementById("reviewMessage");
-    
-      msg.className = "error";
-      msg.style.display = "block";
-      msg.textContent =
-        "✗ Please select a rating before submitting.";
-    
-      setTimeout(() => {
-    
-        msg.style.display = "none";
-    
-      }, 5000);
-    
-      return;
-    }
-    const data = {
-
-      name: document.getElementById("reviewerName").value,
-
-      email: document.getElementById("email").value.trim(),
-
-      country: document.getElementById("country").value,
-
-      service: document.getElementById("service").value,
-
-      review: document.getElementById("reviewText").value,
-
-      rating: selectedRating.value,
-
-      recommend: document.getElementById("recommend").value,
-    };
-    console.log(data);
-    try {
-
-      const res = await fetch(
-        "http://localhost:8000/api/reviews",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(data)
-        }
-      );
-
-      const result = await res.json();
-
-      console.log(result);
-
-      const msg = document.getElementById("reviewMessage");
-
-      msg.className = "success";
-      msg.style.display = "block";
-      msg.textContent = "✓ Review submitted successfully.";
-      setTimeout(() => {
-          msg.style.display = "none";
-      }, 5000);
-      
-      reviewForm.reset();
-      await loadReviews();
-
-    } catch (err) {
-
-      console.log(err);
-
-      const msg = document.getElementById("reviewMessage");
-
-      msg.className = "error";
-      msg.style.display = "block";
-      msg.textContent = "✗ Failed to submit review. Please try again.";
-      setTimeout(() => {
-          msg.style.display = "none";
-      }, 5000);
-    }
-
-  });
-
-}
-
-async function loadReviews() {
-
-  try {
-
-    const res = await fetch(
-      "http://localhost:8000/api/reviews"
-    );
-
-    const reviews = await res.json();
-
-    const reviewsList =
-      document.getElementById("reviewsList");
-
-    if (!reviews.length) {
-      reviewsList.innerHTML =
-        "<h3>No Reviews Yet</h3>";
-      return;
-    }
-
-    reviewsList.innerHTML = "";
-
-    reviews.forEach(review => {
-
-      reviewsList.innerHTML += `
-    
-            <div class="review-card tilt-element"
-                 data-intensity="8">
-    
-                <h3 class="skill-category">
-                    ${review.name}
-                </h3>
-    
-                <div class="skill-list">
-    
-                    <span class="skill-tag">
-                        ${review.country}
-                    </span>
-    
-                    <span class="skill-tag">
-                        ${review.service}
-                    </span>
-    
-                    <span class="skill-tag">
-                        ⭐ ${review.rating}/5
-                    </span>
-    
-                </div>
-    
-                <p class="review-text">
-                    "${review.review}"
-                </p>
-    
-            </div>
-    
-          `;
-
+      card.style.transform =
+        `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
     });
 
-    initTilt();
-
-  } catch (err) {
-
-    console.log(err);
-
-  }
-
+    card.addEventListener('mouseleave', () => {
+      card.style.transform =
+        'perspective(800px) rotateX(0deg) rotateY(0deg)';
+    });
+  });
 }
-
-loadReviews();
